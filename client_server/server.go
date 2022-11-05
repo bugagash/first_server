@@ -8,7 +8,7 @@ import (
 
 const (
 	END_BYTES = "\000\001\002\003\004\005"
-	PORT = "192.168.1.26:8080"
+	PORT = ":8080"
 )
 
 var (
@@ -49,7 +49,7 @@ func handleConnect(conn net.Conn) {
 		log.Println(message)
 		for addr := range Connections {
 			if addr == conn { continue }
-			addr.Write([]byte(strings.ToUpper(message) + END_BYTES))
+			addr.Write([]byte(message + END_BYTES))
 		}
 	}
 	delete(Connections, conn)

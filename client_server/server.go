@@ -2,12 +2,17 @@ package main
 
 import (
 	"net"
+	"log"
 	"strings"
 )
 
 const (
 	END_BYTES = "\000\001\002\003\004\005"
-	PORT = ":8080"
+	PORT = "192.168.1.26:8080"
+)
+
+var (
+	Connections = make(map[net.Conn]bool)
 )
 
 func main() {
@@ -24,19 +29,28 @@ func main() {
 }
 
 func handleConnect(conn net.Conn) {
-	defer conn.Close()
+	//defer conn.Close()
+	Connections[conn] = true
 	var (
 		buffer = make([]byte, 512)
 		message string
 	)
-	for {
-		length, err := conn.Read(buffer)
-		if (length == 0 || err != nil) { break }
-		message += string(buffer[:length])
-		if (strings.HasSuffix(message, END_BYTES)) {
-			message = strings.TrimSuffix(message, END_BYTES)
-			break
+	close: for {
+		message = ""
+		for {
+			length, err := conn.Read(buffer)
+			if err != nil { break close }
+			message += string(buffer[:length])
+			if (strings.HasSuffix(message, END_BYTES)) {
+				message = strings.TrimSuffix(message, END_BYTES)
+				break
+			}
+		}
+		log.Println(message)
+		for addr := range Connections {
+			if addr == conn { continue }
+			addr.Write([]byte(strings.ToUpper(message) + END_BYTES))
 		}
 	}
-	conn.Write([]byte(strings.ToUpper(message)))
+	delete(Connections, conn)
 }

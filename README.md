@@ -1,2 +1,5 @@
-# Some server conections for me
-Directly from name
+# client_server
+Directly from name.
+
+# decent_server
+Not central server try
